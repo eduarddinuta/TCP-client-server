@@ -1,0 +1,46 @@
+Dinuta Eduard Stefan 321CA - Tema 3 PCOM
+
+    In cadrul acestei teme am implementat atat serverul cat si clientul
+unei comunicatii de tip TCP, precum si comunicarea serverului cu clientii
+UDP care publica mesaje. Atat in server cat si in subscriber, operatiile
+de I/O sunt multiplexate folosind API-ul poll. Structura de pachet UDP
+va contine campurile descrise in enutul temei (topic, tipul de date si
+continut), iar structur a pachetului TCP contine tipul pachetului, un 
+numar intreg cu urmatoarele semnificatii: 0 - cerere de subscribe,
+1 - cerere unsubscribe, 2 - trimitere de mesaj, 3 - cereree de conectare,
+4 - semnal de deconectare, precum si un payload de 1600 de octeti.
+Payload-ul va fi interpretat in functie de tipul pachetului.
+    Serverul va primi mesaje de la clientii UDP prin intermediul unui
+socket UDP. De asemenea va primi conexiuni TCP prin intermediul unui socket
+care asculta pe portul dat ca argument. La acceptarea unei noi conexiuni
+va fi mai intai verificat daca exista deja un client cu acelasi ID. Nu se va
+adauga socketul in pfds pana clientul nu trimite ID-ul cu care doreste sa se
+conecteze si este verificat sa nu fie deja conectat. Daca clientul exista deja
+se inchide conexiune cu acesta (prin trimiterea unui pachet de tip disconnect),
+daca nu, socketul returnat va fi introdus in  vectorul pfds pe care va fi facut 
+apelul poll().
+    La primirea unui mesaj de la clientii UDP serverul il va trimite tuturor
+clientilor conectati si care sunt abonati la topicul mesajului. De asemenea
+mesajul va fi pus intr-o coada pentru fiecare client deconectat si abonat la
+topicul mesajului cu sf = 1.
+    La primirea unei comenzi de la tastatura, singura comanda valida va fi exit
+caz in care serverul trimite un mesaj de inchidere a conexiunii catre toti
+clientii conectati, inchide toti socketii si se opreste. Daca se primeste alta
+comanda aceasta este invalida si se asteapta din nou.
+    La primirea unui mesaj de la clientii TCP exista mai multe variante:
+- daca pachetul este o cerere de subscribe clientul va fi adaugat in setul
+de subscriberi al topicului cerut
+- la o cerere de unsubscribe se face operatia opusa, clientul este eliminat
+din setul topicului
+- la un pachet de tipul connect clientul trimite ID-ul serverului pentru a fi
+verificat daca este sau nu deja conectat.
+- la un pachet disconnect, serverul va sterge clientul din vectorul de conexiuni,
+deoarece acesta s-a inchis
+    Clientul functioneaza asemanator serverului la nivelul de comunicare. Acesta
+primeste input atat de la server, pe un singur socket, cat si de la tastatura,
+unde primeste comenzile de subscribe/unsubscribe. De asemenea poate primi si 
+comanda exit caz in care ii trimite serverului un pachet de disconnect. La
+conectare imediat dupa ce functia connect se intoarce, clientul ii trimite
+serverului un pachet de tip connect cu ID-ul cu care doreste sa se conecteze.
+La primirea unui pachet de la server informatia trebuie convertita in formatul
+dorit din payload-ul pachetului, folosind indicatiile din enuntul temei.                                 
